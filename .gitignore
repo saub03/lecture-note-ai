@@ -224,4 +224,4 @@ data/temp_audio/*
 !data/temp_audio/.gitkeep
 
 # Project: experiments (ASR/LLM model tests, references)
-lab/
+lab/reference/
