@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project: ephemeral data (uploaded slides, real-time audio buffers)
+data/uploads/*
+data/temp_audio/*
+!data/uploads/.gitkeep
+!data/temp_audio/.gitkeep
+
+# Project: experiments (ASR/LLM model tests, references)
+lab/
