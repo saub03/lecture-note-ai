@@ -1,12 +1,12 @@
 # LLM Model Test Plan
 
-> Synthesized from 16 reference notebooks in `lab/reference/LLM/` (2026-07-31)
+> LLM 모델 평가 계획 (2026-07-31)
 
 ---
 
 ## 1. Overview: The LLM Pipeline Architecture
 
-Every notebook converges on the same engineering doctrine: **"Don't trust — verify"** (믿지 말고 검증한다). The LLM is not a black box but a contract-bounded component:
+The evaluation experiments converge on the same engineering doctrine: **"Don't trust — verify"** (믿지 말고 검증한다). The LLM is not a black box but a contract-bounded component:
 
 ```
 Input (ASR transcript + context) → [Prompt Contract: roles, budget, fencing]
@@ -16,26 +16,24 @@ Input (ASR transcript + context) → [Prompt Contract: roles, budget, fencing]
      → [Downstream: TTS / note formatting / stream processor]
 ```
 
-### Models Evaluated (16 notebooks)
+### Models Evaluated
 
-| Notebook | Model | Type | VRAM (T4) | Contract Compliance | Key Insight |
-|---|---|---|---|---|---|
-| 5-T | Mini Transformer (scratch) | Theory foundation | N/A | N/A | Causal mask = sequential generation constraint |
-| 5-S | Upstage Solar (API + 10.7B local) | API + local | 10.7B: ~5.4GB (NF4) | 5/5, 0 retries | License table first; `reasoning_effort` dial |
-| 5-P | Qwen3-0.6B + Mocks | Prompt engineering | N/A | Gate violation 60% → 10% | Prompts are contracts; gates guarantee |
-| 5-A | Gemini 3.6 Flash (multimodal) | Cloud API single-call | N/A | 5/5, 0 retries | Catalog ≠ callable; `finish_reason` before parse |
-| 5-D | DeepSeek-R1-Distill-Qwen-1.5B | Reasoning (AR) | ~3.6GB | Skip mode measured | TTFA 15.1s vs 0.2s (66× faster without think) |
-| 5-E | Gemma 4 E2B | Local multimodal | ~10.2GB (fp16) | 5/5, 0 retries | fp16 overflow = silent garbage; sanity probe required |
-| 5-G | Groq (Llama 3.3 70B, 3.1 8B) | Cloud API cascade | N/A | 5/5, 0 retries | Token speed IS UX; TTFT vs throughput |
-| 5-K | EXAONE-4.0-1.2B | Local Korean | ~2.6GB (fp16) | 5/5, 0 retries | License gate as code; T=0.1 suppresses code-switching |
-| 5-L | Llama-3.2-Korean-Bllossom-3B | Local Korean | ~6.4GB (fp16) | Validated output | LLM output is not a response until validated |
-| 5-Q | Qwen3-8B | Local | ~5.4GB (NF4) | 5/5, 0 retries | Arithmetic eliminates fp16; thinking costs TTFA |
-| 5-R | OpenRouter league (multi) | Cloud router | N/A | Per-model scores | Availability ≠ compliance; DNP tracked separately |
-| 5-V | Gemma 4 E2B (audio input) | Local omni | ~10.2GB | 5/5, 0 retries | Data sovereignty; CER probe before contract loop |
-| 7-O | Qwen2.5-Omni-3B | Local omni (ASR+LLM+TTS) | ~6GB (fp16) | Post-hoc only | Cost of omni: no intermediate transcript, no 2-pass guards |
-| 8-T | Midm-2.0-Mini (QLoRA fine-tuned) | Local Korean | ~4-6GB | Pass rate improved | Format decides loss; training data = contract incarnate |
-| async | N/A | Python machinery | N/A | N/A | Async overlaps waiting, not computing |
-| decorator | N/A | Python machinery | N/A | N/A | Registration pattern; `functools.wraps` prevents metadata loss |
+| Model | Type | VRAM (T4) | Contract Compliance | Key Insight |
+|---|---|---|---|---|
+| Mini Transformer (scratch) | Theory foundation | N/A | N/A | Causal mask = sequential generation constraint |
+| Upstage Solar (API + 10.7B local) | API + local | 10.7B: ~5.4GB (NF4) | 5/5, 0 retries | License table first; `reasoning_effort` dial |
+| Qwen3-0.6B + Mocks | Prompt engineering | N/A | Gate violation 60% → 10% | Prompts are contracts; gates guarantee |
+| Gemini 3.6 Flash (multimodal) | Cloud API single-call | N/A | 5/5, 0 retries | Catalog ≠ callable; `finish_reason` before parse |
+| DeepSeek-R1-Distill-Qwen-1.5B | Reasoning (AR) | ~3.6GB | Skip mode measured | TTFA 15.1s vs 0.2s (66× faster without think) |
+| Gemma 4 E2B | Local multimodal | ~10.2GB (fp16) | 5/5, 0 retries | fp16 overflow = silent garbage; sanity probe required |
+| Groq (Llama 3.3 70B, 3.1 8B) | Cloud API cascade | N/A | 5/5, 0 retries | Token speed IS UX; TTFT vs throughput |
+| EXAONE-4.0-1.2B | Local Korean | ~2.6GB (fp16) | 5/5, 0 retries | License gate as code; T=0.1 suppresses code-switching |
+| Llama-3.2-Korean-Bllossom-3B | Local Korean | ~6.4GB (fp16) | Validated output | LLM output is not a response until validated |
+| Qwen3-8B | Local | ~5.4GB (NF4) | 5/5, 0 retries | Arithmetic eliminates fp16; thinking costs TTFA |
+| OpenRouter league (multi) | Cloud router | N/A | Per-model scores | Availability ≠ compliance; DNP tracked separately |
+| Gemma 4 E2B (audio input) | Local omni | ~10.2GB | 5/5, 0 retries | Data sovereignty; CER probe before contract loop |
+| Qwen2.5-Omni-3B | Local omni (ASR+LLM+TTS) | ~6GB (fp16) | Post-hoc only | Cost of omni: no intermediate transcript, no 2-pass guards |
+| Midm-2.0-Mini (QLoRA fine-tuned) | Local Korean | ~4-6GB | Pass rate improved | Format decides loss; training data = contract incarnate |
 
 ---
 
@@ -221,7 +219,7 @@ Input (ASR transcript + context) → [Prompt Contract: roles, budget, fencing]
 
 ### 4.2 Model Selection Framework
 
-Three filters (from 5-S, 5-K, 5-Q):
+Three filters:
 
 1. **License**: Commercial deployment legal? MIT ✓ / Apache 2.0 ✓ / CC-BY-NC ✗ / qwen-research ✗ / llama3.2 ✓
 2. **VRAM arithmetic**: `params × 2 bytes (fp16)` or `params × 0.55 × 1.3 (NF4)` ≤ T4 16GB

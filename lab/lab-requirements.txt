@@ -1,0 +1,97 @@
+# -*- coding: utf-8 -*-
+# lab/ 디렉터리 실험 실행에 필요한 Python 라이브러리
+# ======================================================
+# 이 파일은 `lab/ASR-model-test/asr_metrics.py`, `lab/LLM-model-test/llm_metrics.py`
+# 와 lab 실습 노트북들이 import / pip install 하는 서드파티 패키지를
+# 전부 종합한 것입니다.
+#
+# 설치 방법 (일부는 Colab GPU 런타임 전제):
+#     pip install -r lab/lab-requirements.txt
+#
+# 버전 표기 규칙:
+#   - 실습 노트북이 고정한 버전은 그대로 고정 (==)
+#   - 실습 노트북이 "이상(>=)"으로 요구한 것은 하한만 명시
+#   - 버전 무관한 것은 핀 없이 목록만 유지
+# 실측 검증 환경: transformers 5.14.x / torch 2.8.x / T4 GPU 기준.
+
+
+# ---------------------------------------------------------------------------
+# 공통 — 모든 실험의 기반 (Colab 기본 탑재분이지만 명시적으로 선언)
+# ---------------------------------------------------------------------------
+numpy                 # 오디오 배열·지표 계산 (asr_metrics / llm_metrics 필수)
+torch                 # 실습 노트북 추론/학습 (GPU: T4 전제)
+matplotlib            # 그래프·히스토그램 시각화
+pandas                # 데이터 프레임 처리
+
+# ---------------------------------------------------------------------------
+# 공통 — 지표 모듈 (lab/ASR-model-test, lab/LLM-model-test)
+# ---------------------------------------------------------------------------
+jsonschema            # llm_metrics.py의 출력 계약 게이트 (미설치 시 최소 폴백)
+jiwer                 # asr_metrics.py의 CER 교차 검증 (선택, 미설치 시 건너뜀)
+
+# ---------------------------------------------------------------------------
+# ASR 실습 라이브러리
+# ---------------------------------------------------------------------------
+# ASR 엔진
+openai-whisper        # OpenAI Whisper (import whisper)
+faster-whisper        # CTranslate2 기반 가속 Whisper
+qwen-asr              # Qwen3-ASR 한국어 전사 (import qwen_asr)
+funasr                # SenseVoice 리치 전사 (import funasr)
+silero-vad            # 스트리밍 VAD(발화 경계 검출)
+speechbrain           # 화자 분리(다이어라이제이션) 임베딩
+omnilingual-asr       # Meta Omnilingual ASR (import omnilingual_asr)
+git+https://github.com/lifeiteng/OmniSenseVoice.git  # SenseVoice 파인튜닝 (import omnisense)
+
+# 오디오 처리 / 합성 / 지표
+librosa               # 오디오 로드·특징 추출·노이즈 합성
+soundfile             # WAV 읽기/쓰기 (리치 전사 데이터셋 저장)
+gTTS                  # TTS 문장 큐 시뮬레이션 (발화 합성)
+jiwer                 # CER/WER 계산 (위 공통 항목과 동일 패키지)
+
+# Cohere(한국어 전사) — transformers 기반 토크나이저 의존성
+transformers
+huggingface_hub       # HF 모델 다운로드·게이트 토큰
+sentencepiece         # 토크나이저(사전학습 모델) 전용
+protobuf              # 토크나이저·onnx 모델 구조 파일(.pb) 디코딩
+accelerate            # device_map="auto" 분산 로드
+
+# 화자 분리 — 클러스터링
+scikit-learn          # AgglomerativeClustering 화자 클러스터링
+
+# GPT-Live — OpenAI API + 실시간 웹소켓
+openai                # 채팅/음성 API (>=2.40: response_format 등)
+websocket-client      # Realtime API 웹소켓 (import websocket)
+
+# Meta Omnilingual — torchaudio/torchvision 고정 버전 (torch 2.8.x 대응)
+torchaudio==2.8.0
+torchvision==0.23.0
+
+# ---------------------------------------------------------------------------
+# LLM 실습 라이브러리
+# ---------------------------------------------------------------------------
+# 로컬 모델 추론 (transformers v5 전제 — major==5 어서트)
+transformers>=5.14
+accelerate>=1.14
+bitsandbytes>=0.50    # 4bit NF4 양자화 (compute capability >= 7.5 필요)
+mlx-lm                # MLX LLM (Apple Silicon 네이티브, lab/LLM-model-test)
+
+# 클라우드 API
+openai>=2.40          # Upstage / OpenRouter (json_object 모드)
+google-genai==2.14.0  # Gemini (import google.genai)
+groq==1.5.0           # Groq (Llama 3.3 70B / 3.1 8B)
+
+# 출력 계약 게이트 (전 LLM 실습 공통)
+jsonschema            # 위 공통 항목과 동일 패키지
+
+# 옴니 모델 (ASR+LLM+TTS 단일 모델)
+qwen-omni-utils>=0.0.9  # Qwen2.5-Omni 전처리 (import qwen_omni_utils)
+
+# QLoRA 파인튜닝
+trl>=1.9              # SFT 트레이너
+peft>=0.19            # LoRA 어댑터
+datasets>=5.0         # 학습 데이터셋
+
+# decorator/MCP 실습
+mcp>=1.23,<2          # MCP 도구 등록 실습 (import mcp)
+pydantic              # mcp 의존성·데이터 모델 (decorator 실습에서 직접 import)
+

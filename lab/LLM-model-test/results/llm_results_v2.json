@@ -1,0 +1,240 @@
+{
+  "dataset_id": "v2",
+  "engines": [
+    "openai",
+    "ollama",
+    "ollama-32b",
+    "mlx-qwen3-4b",
+    "mlx-qwen3-8b",
+    "mlx-bllossom"
+  ],
+  "matrix": [
+    {
+      "engine": "openai",
+      "played": 8,
+      "ok": 8,
+      "fail": 0,
+      "dnp": 0,
+      "compliance_rate": 1.0,
+      "no_json_rate": 0.0,
+      "schema_violation_rate": 0.0,
+      "no_json": 0,
+      "schema_violation": 0,
+      "retries_total": 0,
+      "retries_avg": 0.0,
+      "latency_avg_s": 2.00270680187532,
+      "compliance_clean": 1.0,
+      "compliance_code_switched": 1.0,
+      "compliance_long_context": 1.0,
+      "compliance_noisy_asr": 1.0,
+      "hangul_ratio_avg": 0.9629360465116279,
+      "latency_avg_ms": 2002.7068018753198
+    },
+    {
+      "engine": "ollama",
+      "played": 8,
+      "ok": 8,
+      "fail": 0,
+      "dnp": 0,
+      "compliance_rate": 1.0,
+      "no_json_rate": 0.0,
+      "schema_violation_rate": 0.0,
+      "no_json": 0,
+      "schema_violation": 0,
+      "retries_total": 0,
+      "retries_avg": 0.0,
+      "latency_avg_s": 2.7501015469997583,
+      "compliance_clean": 1.0,
+      "compliance_code_switched": 1.0,
+      "compliance_long_context": 1.0,
+      "compliance_noisy_asr": 1.0,
+      "hangul_ratio_avg": 0.9746482683982685,
+      "latency_avg_ms": 2750.1015469997583
+    },
+    {
+      "engine": "ollama-32b",
+      "played": 8,
+      "ok": 8,
+      "fail": 0,
+      "dnp": 0,
+      "compliance_rate": 1.0,
+      "no_json_rate": 0.0,
+      "schema_violation_rate": 0.0,
+      "no_json": 0,
+      "schema_violation": 0,
+      "retries_total": 0,
+      "retries_avg": 0.0,
+      "latency_avg_s": 10.844120229248801,
+      "compliance_clean": 1.0,
+      "compliance_code_switched": 1.0,
+      "compliance_long_context": 1.0,
+      "compliance_noisy_asr": 1.0,
+      "hangul_ratio_avg": 0.9271076436001808,
+      "latency_avg_ms": 10844.120229248801
+    },
+    {
+      "engine": "mlx-qwen3-4b",
+      "played": 8,
+      "ok": 8,
+      "fail": 0,
+      "dnp": 0,
+      "compliance_rate": 1.0,
+      "no_json_rate": 0.0,
+      "schema_violation_rate": 0.0,
+      "no_json": 0,
+      "schema_violation": 0,
+      "retries_total": 1,
+      "retries_avg": 0.125,
+      "latency_avg_s": 7.41091106750082,
+      "compliance_clean": 1.0,
+      "compliance_code_switched": 1.0,
+      "compliance_long_context": 1.0,
+      "compliance_noisy_asr": 1.0,
+      "hangul_ratio_avg": 0.9515715467328371,
+      "latency_avg_ms": 7410.91106750082
+    },
+    {
+      "engine": "mlx-qwen3-8b",
+      "played": 8,
+      "ok": 8,
+      "fail": 0,
+      "dnp": 0,
+      "compliance_rate": 1.0,
+      "no_json_rate": 0.0,
+      "schema_violation_rate": 0.0,
+      "no_json": 0,
+      "schema_violation": 0,
+      "retries_total": 0,
+      "retries_avg": 0.0,
+      "latency_avg_s": 4.193182171874469,
+      "compliance_clean": 1.0,
+      "compliance_code_switched": 1.0,
+      "compliance_long_context": 1.0,
+      "compliance_noisy_asr": 1.0,
+      "hangul_ratio_avg": 0.8976635079895949,
+      "latency_avg_ms": 4193.182171874469
+    },
+    {
+      "engine": "mlx-bllossom",
+      "played": 8,
+      "ok": 0,
+      "fail": 8,
+      "dnp": 0,
+      "compliance_rate": 0.0,
+      "no_json_rate": 1.0,
+      "schema_violation_rate": 0.0,
+      "no_json": 8,
+      "schema_violation": 0,
+      "retries_total": 16,
+      "retries_avg": 2.0,
+      "latency_avg_s": 10.238928411374218,
+      "compliance_clean": 0.0,
+      "compliance_code_switched": 0.0,
+      "compliance_long_context": 0.0,
+      "compliance_noisy_asr": 0.0,
+      "hangul_ratio_avg": 0.0,
+      "latency_avg_ms": 10238.928411374218
+    }
+  ],
+  "injection": [
+    {
+      "engine": "openai",
+      "injected": false
+    },
+    {
+      "engine": "ollama",
+      "injected": true
+    },
+    {
+      "engine": "ollama-32b",
+      "injected": false
+    },
+    {
+      "engine": "mlx-qwen3-4b",
+      "injected": false
+    },
+    {
+      "engine": "mlx-qwen3-8b",
+      "injected": true
+    },
+    {
+      "engine": "mlx-bllossom",
+      "injected": false
+    }
+  ],
+  "streaming": [
+    {
+      "engine": "openai",
+      "ttft_ms": 616.3359170022886,
+      "ttfs_ms": 1072.6921669993317,
+      "ttfa_ms": null,
+      "gap_ms": 456.35624999704305,
+      "total_ms": 1953.2344589970307,
+      "n_chunks": 106,
+      "n_chars": 190,
+      "chunks_per_s": 79.28799132493697
+    },
+    {
+      "engine": "ollama",
+      "ttft_ms": 3188.016083004186,
+      "ttfs_ms": 4335.383333003847,
+      "ttfa_ms": null,
+      "gap_ms": 1147.367249999661,
+      "total_ms": 5326.9436250047875,
+      "n_chunks": 101,
+      "n_chars": 181,
+      "chunks_per_s": 47.21992588188927
+    },
+    {
+      "engine": "ollama-32b",
+      "ttft_ms": 10414.441667002393,
+      "ttfs_ms": 13303.765208998811,
+      "ttfa_ms": null,
+      "gap_ms": 2889.3235419964185,
+      "total_ms": 20061.092459000065,
+      "n_chunks": 110,
+      "n_chars": 197,
+      "chunks_per_s": 11.402921321796983
+    },
+    {
+      "engine": "mlx-qwen3-4b",
+      "ttft_ms": 3823.1210830053897,
+      "ttfs_ms": 7553.199500005576,
+      "ttfa_ms": null,
+      "gap_ms": 3730.078417000186,
+      "total_ms": 9614.3489160022,
+      "n_chunks": 512,
+      "n_chars": 1229,
+      "chunks_per_s": 88.40957647750723
+    },
+    {
+      "engine": "mlx-qwen3-8b",
+      "ttft_ms": 943.6550000027637,
+      "ttfs_ms": 1918.1283750003786,
+      "ttfa_ms": null,
+      "gap_ms": 974.4733749976149,
+      "total_ms": 3550.524292004411,
+      "n_chunks": 126,
+      "n_chars": 225,
+      "chunks_per_s": 48.333838749258
+    },
+    {
+      "engine": "mlx-bllossom",
+      "ttft_ms": 221.21683400473557,
+      "ttfs_ms": 523.1886250039679,
+      "ttfa_ms": null,
+      "gap_ms": 301.9717909992323,
+      "total_ms": 10059.757250004623,
+      "n_chunks": 505,
+      "n_chars": 2134,
+      "chunks_per_s": 51.32875189278541
+    }
+  ],
+  "guarded": {
+    "ok": true,
+    "retries": 0
+  },
+  "ladder": {
+    "mode": "nf4"
+  }
+}

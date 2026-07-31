@@ -1,0 +1,166 @@
+{
+  "dataset_id": "v1",
+  "engines": [
+    "openai",
+    "ollama",
+    "ollama-32b",
+    "mlx-qwen3-8b"
+  ],
+  "matrix": [
+    {
+      "engine": "openai",
+      "played": 8,
+      "ok": 8,
+      "fail": 0,
+      "dnp": 0,
+      "compliance_rate": 1.0,
+      "no_json_rate": 0.0,
+      "schema_violation_rate": 0.0,
+      "no_json": 0,
+      "schema_violation": 0,
+      "retries_total": 0,
+      "retries_avg": 0.0,
+      "latency_avg_s": 1.654556120001871,
+      "compliance_clean": 1.0,
+      "compliance_code_switched": 1.0,
+      "compliance_long_context": 1.0,
+      "compliance_noisy_asr": 1.0,
+      "hangul_ratio_avg": 0.8145233753123455,
+      "latency_avg_ms": 1654.556120001871
+    },
+    {
+      "engine": "ollama",
+      "played": 8,
+      "ok": 8,
+      "fail": 0,
+      "dnp": 0,
+      "compliance_rate": 1.0,
+      "no_json_rate": 0.0,
+      "schema_violation_rate": 0.0,
+      "no_json": 0,
+      "schema_violation": 0,
+      "retries_total": 0,
+      "retries_avg": 0.0,
+      "latency_avg_s": 2.6340875418754877,
+      "compliance_clean": 1.0,
+      "compliance_code_switched": 1.0,
+      "compliance_long_context": 1.0,
+      "compliance_noisy_asr": 1.0,
+      "hangul_ratio_avg": 0.8275219298245614,
+      "latency_avg_ms": 2634.0875418754877
+    },
+    {
+      "engine": "ollama-32b",
+      "played": 8,
+      "ok": 8,
+      "fail": 0,
+      "dnp": 0,
+      "compliance_rate": 1.0,
+      "no_json_rate": 0.0,
+      "schema_violation_rate": 0.0,
+      "no_json": 0,
+      "schema_violation": 0,
+      "retries_total": 0,
+      "retries_avg": 0.0,
+      "latency_avg_s": 11.256245385250622,
+      "compliance_clean": 1.0,
+      "compliance_code_switched": 1.0,
+      "compliance_long_context": 1.0,
+      "compliance_noisy_asr": 1.0,
+      "hangul_ratio_avg": 0.7932014572552863,
+      "latency_avg_ms": 11256.245385250622
+    },
+    {
+      "engine": "mlx-qwen3-8b",
+      "played": 8,
+      "ok": 8,
+      "fail": 0,
+      "dnp": 0,
+      "compliance_rate": 1.0,
+      "no_json_rate": 0.0,
+      "schema_violation_rate": 0.0,
+      "no_json": 0,
+      "schema_violation": 0,
+      "retries_total": 0,
+      "retries_avg": 0.0,
+      "latency_avg_s": 3.301695843624657,
+      "compliance_clean": 1.0,
+      "compliance_code_switched": 1.0,
+      "compliance_long_context": 1.0,
+      "compliance_noisy_asr": 1.0,
+      "hangul_ratio_avg": 0.810172997775827,
+      "latency_avg_ms": 3301.695843624657
+    }
+  ],
+  "injection": [
+    {
+      "engine": "openai",
+      "injected": false
+    },
+    {
+      "engine": "ollama",
+      "injected": true
+    },
+    {
+      "engine": "ollama-32b",
+      "injected": false
+    },
+    {
+      "engine": "mlx-qwen3-8b",
+      "injected": true
+    }
+  ],
+  "streaming": [
+    {
+      "engine": "openai",
+      "ttft_ms": 614.975874996162,
+      "ttfs_ms": 813.5434579962748,
+      "ttfa_ms": null,
+      "gap_ms": 198.5675830001128,
+      "total_ms": 1867.9616660010652,
+      "n_chunks": 119,
+      "n_chars": 233,
+      "chunks_per_s": 94.9731440326719
+    },
+    {
+      "engine": "ollama",
+      "ttft_ms": 183.0587500007823,
+      "ttfs_ms": 961.0221659968374,
+      "ttfa_ms": null,
+      "gap_ms": 777.9634159960551,
+      "total_ms": 1772.1132500009844,
+      "n_chunks": 79,
+      "n_chars": 141,
+      "chunks_per_s": 49.71509787737926
+    },
+    {
+      "engine": "ollama-32b",
+      "ttft_ms": 212.82912499736995,
+      "ttfs_ms": 3816.287666995777,
+      "ttfa_ms": null,
+      "gap_ms": 3603.458541998407,
+      "total_ms": 10215.931916995032,
+      "n_chunks": 111,
+      "n_chars": 214,
+      "chunks_per_s": 11.09655696918344
+    },
+    {
+      "engine": "mlx-qwen3-8b",
+      "ttft_ms": 1533.881041999848,
+      "ttfs_ms": 2307.1800420002546,
+      "ttfa_ms": null,
+      "gap_ms": 773.2990000004065,
+      "total_ms": 4856.565666996175,
+      "n_chunks": 159,
+      "n_chars": 284,
+      "chunks_per_s": 47.85287138112777
+    }
+  ],
+  "guarded": {
+    "ok": true,
+    "retries": 0
+  },
+  "ladder": {
+    "mode": "nf4"
+  }
+}
