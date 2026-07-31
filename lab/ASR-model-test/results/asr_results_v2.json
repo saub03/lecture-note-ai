@@ -1,0 +1,56 @@
+{
+  "dataset_id": "v2",
+  "enabled_engines": [
+    "mlx-whisper",
+    "openai-whisper",
+    "sensevoice"
+  ],
+  "matrix": [
+    {
+      "engine": "mlx-whisper",
+      "cer_clean": 0.015407407407407408,
+      "cer_code_switched": 0.6762707444286392,
+      "cer_noisy": 0.09928703703703703,
+      "cer_silence": 1.0,
+      "latency_avg_ms": 436.68392122203335,
+      "rtf_avg": 0.07913422289796919
+    },
+    {
+      "engine": "openai-whisper",
+      "cer_clean": 0.015407407407407408,
+      "cer_code_switched": 0.6762707444286392,
+      "cer_noisy": 0.09928703703703703,
+      "cer_silence": 1.0,
+      "latency_avg_ms": 610.1151736667008,
+      "rtf_avg": 0.10958682000784677
+    },
+    {
+      "engine": "sensevoice",
+      "cer_clean": 0.05697222222222222,
+      "cer_code_switched": 0.705054528212423,
+      "cer_noisy": 0.16132407407407406,
+      "cer_silence": 1.0,
+      "latency_avg_ms": 584.1124976106787,
+      "rtf_avg": 0.10610698183137222
+    }
+  ],
+  "hallucination": [
+    {
+      "engine": "mlx-whisper",
+      "hallucination_rate": 1.0
+    },
+    {
+      "engine": "openai-whisper",
+      "hallucination_rate": 1.0
+    },
+    {
+      "engine": "sensevoice",
+      "hallucination_rate": 1.0
+    }
+  ],
+  "streaming": {
+    "first_partial_ms": 1000.0,
+    "final_latency_ms": 0.0,
+    "rtf": 0.46115350651558995
+  }
+}
