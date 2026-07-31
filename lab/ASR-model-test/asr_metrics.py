@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """ASR 모델 평가 지표 모듈 (lab/ASR-model-test).
 
-이 파일은 `test-way.md`의 2장(핵심 평가 지표)과 `lab/reference/ASR/`의
-레퍼런스 노트북 12개 중 지표 계산에 해당하는 코드(2-1, 2-2, 2-3, 2-D, 2-R,
-2-S, 2-V, 2-W)를 종합해 만든 평가용 모듈입니다.
+이 파일은 `test-way.md`의 2장(핵심 평가 지표)의 기준선·공식을 그대로
+구현한 평가용 모듈입니다.
 
 테스트 목적은 크게 네 가지로 나뉩니다 (test-way.md 2장):
 
@@ -60,7 +59,7 @@ REPETITION_RUN = 4
 
 # 정형구 환각 패턴. Whisper 계열 모델이 무음/잡음 구간에서 "아무것도 들었는데"
 # 만들어내는 유튜브식·뉴스식 문구들. test-way.md 3.4의 신호 ②.
-# 참고(2-3): Cohere, Whisper, Qwen3 모두 침묵에서 이렇게 환각을 냅니다.
+# 참고: Cohere, Whisper, Qwen3 모두 침묵에서 이렇게 환각을 냅니다.
 HALLUCINATION_PATTERNS = [
     "시청해주셔서 감사합니다",
     "구독",
@@ -77,7 +76,7 @@ HALLUCINATION_PATTERNS = [
 # ---------------------------------------------------------------------------
 
 def normalize_ko(text: str, keep_spaces: bool = False) -> str:
-    """한국어 전사 정규화 (2-S / 2-V / 2-W 세션의 공통 기준선).
+    """한국어 전사 정규화 (평가 전 공통 기준선).
 
     평가 전에 원문(ref)과 인식 결과(hyp)를 같은 형태로 맞춰야 합니다.
     그렇지 않으면 "카드 결제가 안 돼요." 와 "카드결제가안돼요"가
@@ -129,7 +128,7 @@ def levenshtein(a, b) -> int:
 
     메모리 최적화: 전체 (n+1) x (m+1) 표를 만들지 않고, 바로 윗행 `prev`
     한 줄만 유지합니다. 어떤 셀도 직전 행/열만 참조하기 때문에
-    한 줄 DP로 충분합니다(2-W에서 쓴 방식).
+    한 줄 DP로 충분합니다.
 
     Args:
         a: 시퀀스(문자열 또는 리스트).
@@ -224,7 +223,7 @@ def cer_batch(refs, hyps) -> list:
 # ---------------------------------------------------------------------------
 
 # 비발화(non-speech) 프레임 라벨. 화자 ID는 0, 1, 2, ... 를 쓰고,
-# 음성이 없는 프레임은 항상 -1(NOSPK)로 표시합니다. (2-D 세션 규약)
+# 음성이 없는 프레임은 항상 -1(NOSPK)로 표시합니다.
 NOSPK = -1
 
 
@@ -238,7 +237,7 @@ def labels_from_segments(segments, total_ms: int, frame_ms: int = 10) -> np.ndar
     Args:
         segments: (start_ms, end_ms, speaker_id) 튜플의 리스트.
         total_ms: 전체 오디오 길이(ms). 프레임 수 결정에 사용.
-        frame_ms: 프레임 해상도(ms). DER 평가 해상도(2-D: 10ms).
+        frame_ms: 프레임 해상도(ms). DER 평가 해상도(10ms).
     Returns:
         길이 = ceil(total_ms / frame_ms)인 int 배열.
         음성 없는 구간은 NOSPK(-1), 음성 구간은 화자 ID.
@@ -390,7 +389,7 @@ def eou_wait_ms(silence_chunks: int, chunk_ms: float = 320.0) -> float:
 
 
 def streaming_metrics(events: list, speech_ms: float, wall_s: float) -> dict:
-    """스트리밍 지연 요약 — 시뮬레이션 이벤트 스트림에서 계산 (2-R).
+    """스트리밍 지연 요약 — 시뮬레이션 이벤트 스트림에서 계산.
 
     스트리밍 전사는 오디오가 끝나기 전부터 partial(중간) 결과를 내보내고,
     발화가 끝나면 final(최종) 결과를 확정합니다. 이 함수는 그 이벤트들에서
@@ -433,7 +432,7 @@ def speech_ratio(audio: np.ndarray, sr: int, frame_ms: int = 30,
 
     오디오를 frame_ms(기본 30ms) 프레임으로 나누고, 각 프레임의 RMS(제곱 평균
     제곱근)가 energy_thresh(기본 0.02)를 넘으면 "말하는 프레임"으로 셉니다.
-    전체 프레임 중 말하는 프레임의 비율을 반환합니다 (2-3 세션).
+    전체 프레임 중 말하는 프레임의 비율을 반환합니다.
 
     쓰임새 (환각 필터의 입력): speech_ratio가 거의 0인데(== 거의 침묵) 텍스트가
     돌아왔다면 모델이 침묵에서 환각을 만든 것 (test-way.md 2.3의 Speech ratio).
@@ -463,7 +462,7 @@ def speech_ratio(audio: np.ndarray, sr: int, frame_ms: int = 30,
 
 def judge_confidence(avg_logprob, text: str,
                      threshold: float = LOGPROB_THRESHOLD) -> bool:
-    """전사 결과를 신뢰할 수 있는지 판정 (2-3 세션).
+    """전사 결과를 신뢰할 수 있는지 판정.
 
     엔진마다 신뢰도 신호가 다르므로 정책이 그 차이를 흡수해야 합니다
     (어댑터 패턴의 핵심 — test-way.md 3.10).
@@ -531,7 +530,7 @@ def is_hallucination(text: str, audio_duration_s: float, speech_ratio_val: float
                      patterns: list = HALLUCINATION_PATTERNS,
                      min_speech_ratio: float = MIN_SPEECH_RATIO,
                      repetition_run: int = REPETITION_RUN) -> bool:
-    """3가지 신호로 환각(hallucination) 여부 판정 (2-3 / test-way.md 3.4).
+    """3가지 신호로 환각(hallucination) 여부 판정 (test-way.md 3.4).
 
     모든 ASR 엔진(Cohere, Whisper, Qwen3)이 침묵에서 환각을 만드는 것이
     확인되어 있어, VAD 게이트에 더해 텍스트 레벨 필터가 필요합니다.
@@ -549,7 +548,7 @@ def is_hallucination(text: str, audio_duration_s: float, speech_ratio_val: float
         audio_duration_s: 오디오 길이(초). 파이프라인 호출 계약에 포함된 인자로,
                           현재 규칙은 길이를 직접 쓰지 않지만 향후
                           "짧은 길이 + 고신뢰도" 같은 규칙을 위해 보관합니다.
-                          (레퍼런스 KoreanASR.recognize 와 시그니처 일치)
+                          
         speech_ratio_val: speech_ratio() 결과 (0.0~1.0).
         patterns: 정형구 패턴 목록. 기본 HALLUCINATION_PATTERNS.
         min_speech_ratio: 침묵 역설 판정 기준. 기본 0.05.
@@ -690,7 +689,7 @@ def measure_vram_mb() -> float:
 # ---------------------------------------------------------------------------
 
 def add_noise(clean: np.ndarray, snr_db: float, seed: int = 42) -> np.ndarray:
-    """목표 SNR(dB)이 되도록 백색소음을 섞는다 (2-W 세션 방식).
+    """목표 SNR(dB)이 되도록 백색소음을 섞는다.
 
     노이즈 스트레스 테스트(test-way.md 3.1)에서 클린 오디오에 특정 SNR의
     잡음을 합성합니다. 기본 SNR 5dB는 "콜센터 험지"를 재현한 조건입니다.
@@ -733,7 +732,7 @@ def add_noise(clean: np.ndarray, snr_db: float, seed: int = 42) -> np.ndarray:
 
 
 def measure_snr(clean: np.ndarray, noisy: np.ndarray) -> float:
-    """합성 결과의 "실측" SNR(dB)을 계산해 검증한다 (2-W).
+    """합성 결과의 "실측" SNR(dB)을 계산해 검증한다.
 
     add_noise()가 의도한 SNR을 실제로 만들었는지 교차 검증하는 용도입니다.
     (클리핑 정규화 때문에 목표치와 미세한 차이가 날 수 있습니다.)
@@ -760,7 +759,7 @@ def measure_snr(clean: np.ndarray, noisy: np.ndarray) -> float:
 # ---------------------------------------------------------------------------
 
 def evaluate_set(transcribe_fn, eval_set: list) -> list:
-    """평가 세트의 모든 항목을 전사하고 항목별 지표를 계산 (2-2).
+    """평가 세트의 모든 항목을 전사하고 항목별 지표를 계산.
 
     "어떤 엔진이든 transcribe_fn 하나만 맞추면 심사대에 올린다"는
     어댑터 패턴(3.10)의 발상이 벤치마크에도 그대로 적용됩니다.
@@ -793,7 +792,7 @@ def evaluate_set(transcribe_fn, eval_set: list) -> list:
 
 def run_benchmark(engine_name: str, transcribe_fn, eval_set: list,
                   conditions: list = None, verbose: bool = True) -> dict:
-    """평가 세트 전체를 돌려 조건별 CER + 평균 지연/RTF를 집계 (2-2).
+    """평가 세트 전체를 돌려 조건별 CER + 평균 지연/RTF를 집계.
 
     결과는 test-way.md 4.3 비교 매트릭스의 한 행 형태입니다:
     engine / cer_<condition> / latency_avg_ms / rtf_avg.
@@ -836,11 +835,11 @@ def run_benchmark(engine_name: str, transcribe_fn, eval_set: list,
 # ---------------------------------------------------------------------------
 # 자체 검증(self-test) — 모델·GPU 없이 오프라인으로 실행되는 테스트
 # ---------------------------------------------------------------------------
-# 레퍼런스 노트북의 assert 블록을 그대로 옮겨 온 것입니다.
+# 아래 assert 블록은 각 지표의 동작을 오프라인에서 검증하는 자체 테스트입니다.
 # `python3 asr_metrics.py`로 실행하면 아래 모든 검증이 통과해야 합니다.
 
 if __name__ == "__main__":
-    # --- 2.1 CER 검증 (2-1 / 2-S 케이스) ---
+    # --- 2.1 CER 검증 ---
     assert cer("안녕하세요", "안녕하세요") == 0.0                          # 완벽 일치
     assert abs(cer("안녕하세요", "안녕하세유") - 0.2) < 1e-9              # 치환 1/5
     assert cer("카드 결제가 안 돼요.", "카드결제가 안돼요") == 0.0         # 공백/부호 무시
@@ -853,25 +852,25 @@ if __name__ == "__main__":
     assert wer("배송 조회 부탁해요", "배송 조회 부탁해") == 1 / 3          # 어절 1개 삭제
     assert wer("배송 조회 부탁해요", "배송 조회 부탁해요") == 0.0
 
-    # --- 2.1 DER 검증 (2-D): 화자 번호가 뒤집혀도 DER = 0이어야 함 ---
+    # --- 2.1 DER 검증: 화자 번호가 뒤집혀도 DER = 0이어야 함 ---
     _r = [(0, 1000, 0), (1500, 2500, 1)]
     assert der(_r, [(0, 1000, 1), (1500, 2500, 0)], 3000)["der"] == 0.0
     assert der(_r, [(0, 1000, 0)], 3000)["miss"] > 0                     # 둘째 발화 누락
 
-    # --- 2.3 신뢰도 정책 검증 (2-3) ---
+    # --- 2.3 신뢰도 정책 검증 ---
     assert judge_confidence(-0.3, "안녕하세요") is True                   # 임계값 이상
     assert judge_confidence(-1.2, "안녕하세요") is False                  # 임계값 미만
     assert judge_confidence(None, "안녕하세요") is True                   # API 엔진 대리 신호
     assert judge_confidence(-0.3, "") is False                           # 빈 텍스트
 
-    # --- 2.3 환각 필터 검증 (2-3) ---
+    # --- 2.3 환각 필터 검증 ---
     assert is_hallucination("시청해주셔서 감사합니다", 3.0, 0.5) is True   # 정형구
     assert is_hallucination("네 네 네 네 확인했습니다", 3.0, 0.5) is True  # 토큰 반복 4회
     assert is_hallucination("배송이 어디까지 왔나요", 3.0, 0.01) is True   # 침묵 역설
     assert is_hallucination("배송이 어디까지 왔나요", 3.0, 0.5) is False
     assert is_hallucination("", 3.0, 0.0) is False                       # 빈 텍스트는 아님
 
-    # --- 2.3 발화 비율 + 환각률 검증 (2-3): 1초 음성 + 1초 침묵 x 2 합성 스트림 ---
+    # --- 2.3 발화 비율 + 환각률 검증: 1초 음성 + 1초 침묵 x 2 합성 스트림 ---
     _sr = 16000
     _t = np.arange(_sr) / _sr
     _burst = (np.sin(2 * np.pi * 300 * _t) * 0.5).astype(np.float32)   # 1초 톤
@@ -881,7 +880,7 @@ if __name__ == "__main__":
     # 침묵 트랙: 텍스트 있는 1건은 환각, 빈 1건은 정상 → 환각률 50%.
     assert abs(hallucination_rate(["텍스트", ""], [0.0, 0.0]) - 0.5) < 1e-9
 
-    # --- 2.2 스트리밍 지연 분해 검증 (2-R) ---
+    # --- 2.2 스트리밍 지연 분해 검증 ---
     _events = [{"event": "partial", "t_ms": 1200},
                {"event": "partial", "t_ms": 1800},
                {"event": "final", "t_ms": 2600}]
@@ -897,11 +896,11 @@ if __name__ == "__main__":
     assert batch_throughput(10, 2.0) == 5.0
     assert quantization_gap(0.05, 0.08)["absolute"] == 0.03
 
-    # --- 노이즈 합성 교차 검증 (2-W): 실측 SNR ≈ 목표 SNR ---
+    # --- 노이즈 합성 교차 검증: 실측 SNR ≈ 목표 SNR ---
     _sig = (0.3 * np.sin(2 * np.pi * 220 * np.linspace(0, 1, _sr))).astype(np.float32)
     assert abs(measure_snr(_sig, add_noise(_sig, 5.0)) - 5.0) < 0.3
 
-    # --- jiwer 설치 시 CER 교차 검증 (2-1, 선택 사항) ---
+    # --- jiwer 설치 시 CER 교차 검증 (선택 사항) ---
     try:
         import jiwer
         assert abs(cer("배송 조회", "배숭 조회")

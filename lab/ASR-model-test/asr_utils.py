@@ -1,3 +1,21 @@
+# -*- coding: utf-8 -*-
+"""ASR 모델 테스트 유틸리티 모듈 (lab/ASR-model-test).
+
+`asr_test.ipynb`가 사용하는 "부수 작업"을 모아 두는 모듈입니다.
+노트북을 간결하고 읽기 쉽게 유지하기 위해 아래 기능을 담당합니다 (test-way.md 참조):
+
+- `env_check_mac`      : Apple Silicon 실험 환경(파이썬/MLX/MPS/ASR 엔진/패키지) 점검
+- 오디오 I/O           : `load_audio` / `save_wav` / `audio_duration_s` /
+                          `synth_utterance`(gTTS) / `make_silence` / `make_quiet_noise`
+- 평가 세트 생성       : `DATASET_V1` / `DATASET_V2` + `build_eval_set` +
+                          `summarize_eval_set` — test-way.md 4.1의 테스트 트랙
+                          (clean / code_switched / noisy / silence / streaming) 제작
+- 스트리밍 시뮬레이션  : `simulate_stream` — 성장 버퍼 재전사 방식 (test-way.md 3.8)
+- 결과 저장            : `save_results_json`
+
+모든 오디오는 **16kHz 모노 float32** 표준을 따릅니다 (test-way.md 3.1).
+"""
+
 import importlib.util
 import json
 import os
@@ -7,6 +25,7 @@ import time
 
 import numpy as np
 
+# 평가용 오디오의 공통 샘플링 레이트 (모든 ASR 엔진의 표준 입력).
 SAMPLE_RATE = 16000
 
 # ---------------------------------------------------------------------------
@@ -97,6 +116,7 @@ def save_wav(audio, path, sr=SAMPLE_RATE) -> None:
 
 
 def audio_duration_s(path) -> float:
+    """오디오 파일의 길이(초)를 반환 (librosa, RTF/지연 지표 계산용)."""
     import librosa
     return float(librosa.get_duration(path=str(path)))
 
@@ -104,7 +124,7 @@ def audio_duration_s(path) -> float:
 def synth_utterance(text, out_wav, lang="ko", sr=SAMPLE_RATE) -> np.ndarray:
     """gTTS로 문장 합성 → 16kHz wav 저장, 웨이브폼 반환.
 
-    레퍼런스 2-W와 동일한 패턴(gTTS mp3 → librosa 로드 → wav 저장)입니다.
+    gTTS mp3 → librosa 로드 → wav 저장의 표준 패턴입니다.
     네트워크 필요(Google TTS).
     """
     from gtts import gTTS
@@ -141,6 +161,10 @@ def make_quiet_noise(dur_s, amp=0.001, seed=0, sr=SAMPLE_RATE) -> np.ndarray:
 
 SILENCE_DUR_S = 4.0  # 침묵 트랙 발화 길이(초)
 
+# 평가용 발화 모음. v1/v2는 서로 다른 문장으로, "데이터셋을 바꿔도 같은
+# 결론이 나오는지"(재현성 + 일반화)를 검증하기 위한 두 세트입니다.
+#   - clean / code_switched : {발화 ID: gTTS로 합성할 한국어(또는 혼용) 문장}
+#   - silence               : {발화 ID: "zeros"(순수 침묵) | "quiet"(미세 소음)}
 DATASET_V1 = {
     "clean": {
         "utt_001": "오늘 강의에서는 데이터베이스 트랜잭션의 네 가지 성질에 대해 다룹니다",
@@ -202,11 +226,15 @@ def build_eval_set(tracks, out_dir, snr_db=5.0, seed=42, silence_dur_s=SILENCE_D
     """
     from asr_metrics import add_noise
 
+    # 저장 디렉터리 준비 (data/ 아래 권장 → gitignore 대상, 실험 산출물 아님)
     os.makedirs(out_dir, exist_ok=True)
+    # 최종 반환값: asr_metrics.evaluate_set()이 그대로 받아 쓰는 항목 목록.
     eval_set = []
 
+    # (1) clean / code_switched / silence 트랙 생성
     for condition, items in tracks.items():
         if condition == "silence":
+            # 침묵 트랙: "zeros"(순수 침묵) 또는 "quiet"(미세 소음) wav 생성.
             for utt_id, kind in items.items():
                 if kind == "quiet":
                     y = make_quiet_noise(silence_dur_s, seed=int(utt_id[-3:]))
@@ -214,15 +242,18 @@ def build_eval_set(tracks, out_dir, snr_db=5.0, seed=42, silence_dur_s=SILENCE_D
                     y = make_silence(silence_dur_s)
                 wav = os.path.join(out_dir, f"{utt_id}.wav")
                 save_wav(y, wav)
+                # 침묵 트랙의 정답 텍스트는 "" — 아무 텍스트나 나오면 환각으로 간주.
                 eval_set.append((wav, "", condition, float(silence_dur_s)))
         else:
+            # 일반 트랙: 문장을 gTTS(한국어)로 합성해 wav로 저장.
             for utt_id, text in items.items():
                 wav = os.path.join(out_dir, f"{utt_id}.wav")
                 synth_utterance(text, wav)
                 eval_set.append(
                     (wav, text, condition, audio_duration_s(wav)))
 
-    # noisy 트랙: clean 트랙의 TTS wav에 SNR 5dB 백색소음 주입.
+    # (2) noisy 트랙: clean 트랙의 wav에 SNR 5dB 백색소음을 주입해 생성
+    #     (test-way.md 3.1 — 노이즈 스트레스 테스트, SNR 5dB = 콜센터 험지 수준).
     clean = tracks.get("clean") or {}
     for utt_id, text in clean.items():
         clean_wav = os.path.join(out_dir, f"{utt_id}.wav")
@@ -238,6 +269,7 @@ def build_eval_set(tracks, out_dir, snr_db=5.0, seed=42, silence_dur_s=SILENCE_D
 def summarize_eval_set(eval_set) -> None:
     """생성된 평가 세트 요약 출력 (트랙별 항목 수, 길이 범위)."""
     from collections import defaultdict
+    # 트랙(condition)별로 항목을 모아 길이를 집계한다.
     by_cond = defaultdict(list)
     for _, ref, cond, dur in eval_set:
         by_cond[cond].append((dur, ref))
@@ -271,29 +303,32 @@ def simulate_stream(audio, adapter, chunk_s=1.0, eou_silence_chunks=2,
     from asr_metrics import speech_ratio
 
     n = len(audio)
-    chunk_len = int(chunk_s * sr)
+    chunk_len = int(chunk_s * sr)  # 청크당 샘플 수
     events = []
     t0 = time.perf_counter()
-    silence_run = 0
-    started = False
-    last_text = ""
-    speech_ms = 0.0
+    silence_run = 0   # 연속 침묵 청크 수 (발화 종료 판정용)
+    started = False   # 발화가 아직 진행 중인지
+    last_text = ""    # 직전 전사 결과 (final 이벤트에 재사용)
+    speech_ms = 0.0   # 마지막 발화 구간의 종료 시각(ms)
 
     pos = 0
     while pos < n:
+        # (1) 다음 청크 경계까지 "성장 버퍼" 확장 후 전체를 재전사
         pos = min(pos + chunk_len, n)
         t_ms = pos / sr * 1000.0
-        chunk = audio[:pos]
-        result = adapter.transcribe(chunk)
+        chunk = audio[:pos]                    # 지금까지 쌓인 오디오
+        result = adapter.transcribe(chunk)     # 버퍼 전체 재전사 (test-way.md 3.8)
         text = result["text"]
-        ratio = speech_ratio(chunk, sr)
+        ratio = speech_ratio(chunk, sr)        # RMS 기반 발화 비율
 
         if ratio >= min_speech_ratio and text:
+            # 발화 중 → 중간 결과(partial) 이벤트 발생
             started = True
             silence_run = 0
             speech_ms = t_ms
             events.append({"event": "partial", "t_ms": t_ms, "text": text})
         else:
+            # 침묵 청크 → 연속 침묵이 임계값을 넘으면 발화 종료(final)
             silence_run += 1
             if started and silence_run >= eou_silence_chunks:
                 events.append({"event": "final", "t_ms": t_ms, "text": last_text})
@@ -301,9 +336,10 @@ def simulate_stream(audio, adapter, chunk_s=1.0, eou_silence_chunks=2,
                 silence_run = 0
         last_text = text
 
+    # (2) 오디오가 끝났는데도 미종료 상태면 마지막 시점에 final 확정
     if started:
         events.append({"event": "final", "t_ms": n / sr * 1000.0, "text": last_text})
-    wall_s = time.perf_counter() - t0
+    wall_s = time.perf_counter() - t0  # 전체 벽시계 시간(초)
     return events, speech_ms, wall_s
 
 
@@ -312,6 +348,7 @@ def simulate_stream(audio, adapter, chunk_s=1.0, eou_silence_chunks=2,
 # ---------------------------------------------------------------------------
 
 def save_results_json(data, path) -> None:
+    """결과 dict를 JSON 파일로 저장 (UTF-8, 한글 그대로 유지)."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)

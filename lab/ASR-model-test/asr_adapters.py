@@ -86,22 +86,24 @@ def _as_path(audio_or_path, suffix=".wav") -> str:
 def make_contract(*, utt_id, engine, model, text, language, avg_logprob,
                   no_speech_prob, latency_s, duration_s, segments) -> dict:
     """엔진 중립 결과 → 계약 dict (test-way.md 3.10)."""
+    # RTF(실시간 계수) = 처리 시간 / 오디오 길이 (test-way.md 2.2).
+    # 오디오 길이를 알 수 없으면(0 또는 None) 측정 불가 → None 처리.
     if duration_s is None or duration_s <= 0:
         rtf = None
     else:
         rtf = latency_s / duration_s
     return {
-        "utt_id": utt_id or "utt_000",
-        "engine": engine,
-        "model": model,
-        "text": (text or "").strip(),
-        "language": language,
-        "confidence_ok": judge_confidence(avg_logprob, text),
-        "avg_logprob": avg_logprob,
-        "no_speech_prob": no_speech_prob,
-        "latency_ms": latency_s * 1000.0,
-        "rtf": rtf,
-        "segments": segments,
+        "utt_id": utt_id or "utt_000",     # 발화 식별자 (없으면 기본값)
+        "engine": engine,                  # 어댑터 이름 ("mlx-whisper" 등)
+        "model": model,                    # 실제 사용 모델 식별자
+        "text": (text or "").strip(),      # 전사 텍스트 (공백 제거)
+        "language": language,              # 언어 코드 ("ko")
+        "confidence_ok": judge_confidence(avg_logprob, text),  # 신뢰도 판정
+        "avg_logprob": avg_logprob,        # Whisper 계열 신뢰도 신호
+        "no_speech_prob": no_speech_prob,  # 무음 확률 (환각 위험 신호)
+        "latency_ms": latency_s * 1000.0,  # 전사 소요 시간(ms)
+        "rtf": rtf,                        # 실시간 계수
+        "segments": segments,              # 세그먼트 상세 (없으면 [])
     }
 
 
@@ -139,13 +141,16 @@ class ASRAdapter(ABC):
                    audio_duration_s: float = None) -> dict:
         """오디오(경로 또는 16kHz 배열) → 계약 dict. 절대 예외를 던지지 않고
         텍스트가 없어도 계약 형태로 반환합니다 (test-way.md 3.3)."""
+        # 지연/RTF 계산에 필요한 오디오 길이(초). 호출자가 주면 그대로 사용.
         duration_s = audio_duration_s if audio_duration_s is not None \
             else _audio_duration_s(audio)
-        t0 = time.perf_counter()
-        raw = self._transcribe_raw(audio)
-        latency_s = time.perf_counter() - t0
+        t0 = time.perf_counter()          # 전사 시간 측정 시작
+        raw = self._transcribe_raw(audio) # 엔진별 실제 호출 (하위 클래스 구현)
+        latency_s = time.perf_counter() - t0  # 순수 전사 소요 시간
 
         text = (raw.get("text") or "").strip()
+        # 엔진이 no_speech_prob 수치를 주지 않았지만 no_speech 플래그만
+        # 준 경우(SenseVoice의 <|nospeech|> 태그 등)는 1.0으로 매핑.
         no_speech = raw.get("no_speech_prob")
         if no_speech is None and raw.get("no_speech"):
             no_speech = 1.0
@@ -394,14 +399,17 @@ ENGINE_REGISTRY = {
 def create_adapter(engine: str, model_id: str = None, language: str = "ko",
                    **options) -> ASRAdapter:
     """엔진 이름 → 어댑터 인스턴스. 미등록/미설치 엔진은 명확히 실패합니다."""
+    # 1) 등록되지 않은 엔진명은 바로 오류.
     if engine not in ENGINE_REGISTRY:
         raise ValueError(
             f"미등록 엔진 '{engine}'. 등록됨: {sorted(ENGINE_REGISTRY)}")
     cls = ENGINE_REGISTRY[engine]
+    # 2) 필수 패키지가 설치돼 있지 않으면(가드) 사용 불가를 명확히 안내.
     if not cls.importable():
         raise RuntimeError(
             f"'{engine}' 어댑터의 필수 패키지가 없어 사용할 수 없습니다. "
             f"lab/lab-requirements.txt 참고.")
+    # 3) 모델/언어/디코딩 옵션을 넣어 어댑터 인스턴스 생성.
     return cls(model_id=model_id, language=language, **options)
 
 
@@ -414,5 +422,6 @@ def adapter_available(engine: str) -> bool:
 def make_transcribe_fn(adapter: ASRAdapter):
     """(오디오 경로/배열) -> 텍스트 함수. asr_metrics.evaluate_set과 호환."""
     def fn(audio):
+        # 계약 dict에서 텍스트만 꺼내 벤치마크 하네스가 요구하는 형태로 맞춘다.
         return adapter.transcribe(audio)["text"]
     return fn

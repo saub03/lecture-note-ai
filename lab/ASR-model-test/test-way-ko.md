@@ -1,12 +1,12 @@
 # ASR 모델 테스트 계획
 
-> `lab/reference/ASR/`의 레퍼런스 노트북 12개에서 종합 (2026-07-31)
+> ASR 모델 평가 계획 (2026-07-31)
 
 ---
 
 ## 1. 개요: ASR 파이프라인 아키텍처
 
-모든 노트북이 하나의 아키텍처 패턴으로 수렴합니다:
+모든 평가 실험이 하나의 아키텍처 패턴으로 수렴합니다:
 
 ```
 Audio → [전처리: 16kHz 모노, log-mel 스펙트로그램]
@@ -18,18 +18,18 @@ Audio → [전처리: 16kHz 모노, log-mel 스펙트로그램]
      → [데이터 계약 어댑터 → dict]
 ```
 
-### 평가된 엔진 (노트북 12개)
+### 평가된 엔진
 
-| 노트북 | 엔진 | 아키텍처 | 한국어 지원 | 신뢰도 지표 | 지연 특성 |
-|---|---|---|---|---|---|
-| 2-1, 2-3, 2-W | faster-whisper (large-v3-turbo) | Encoder-Decoder (AR) | 예 | `avg_logprob` | 빠름 (turbo: 디코더 4층) |
-| 2-W FT | ghost613/ft-whisper-turbo-korean | Encoder-Decoder (AR) | 예 (파인튜닝) | `avg_logprob` | turbo와 동일 |
-| 2-S | Qwen3-ASR-0.6B | LLM 기반 (AR) | 예 (52개 언어) | `text != ""` 프록시 | 발화당 수백 ms |
-| 2-C | Cohere Transcribe | Conformer+AED (NAR) | 예 | 없음 (VAD 게이트 필요) | 빠름, 35초 자동 청크 |
-| 2-M | Meta Omnilingual (CTC) | Encoder+CTC (NAR) | 예 (1,672개 언어) | 없음 | 단일 추론 최고 속도 |
-| 2-M | Meta Omnilingual (LLM) | Encoder+LLaMA (AR) | 예 | 없음 | 느림 (자기회귀 패널티) |
-| 2-V | SenseVoice-Small | CTC (NAR) | 예 | `<\|nospeech\|>` 태그 | 오디오 10초당 ~70ms |
-| 2-L | GPT-Live (분석 전용) | Full-duplex 블랙박스 | 예 | N/A | 프레임 단위 40ms |
+| 엔진 | 아키텍처 | 한국어 지원 | 신뢰도 지표 | 지연 특성 |
+|---|---|---|---|---|
+| faster-whisper (large-v3-turbo) | Encoder-Decoder (AR) | 예 | `avg_logprob` | 빠름 (turbo: 디코더 4층) |
+| ghost613/ft-whisper-turbo-korean (한국어 FT) | Encoder-Decoder (AR) | 예 (파인튜닝) | `avg_logprob` | turbo와 동일 |
+| Qwen3-ASR-0.6B | LLM 기반 (AR) | 예 (52개 언어) | `text != ""` 프록시 | 발화당 수백 ms |
+| Cohere Transcribe | Conformer+AED (NAR) | 예 | 없음 (VAD 게이트 필요) | 빠름, 35초 자동 청크 |
+| Meta Omnilingual (CTC) | Encoder+CTC (NAR) | 예 (1,672개 언어) | 없음 | 단일 추론 최고 속도 |
+| Meta Omnilingual (LLM) | Encoder+LLaMA (AR) | 예 | 없음 | 느림 (자기회귀 패널티) |
+| SenseVoice-Small | CTC (NAR) | 예 | `<\|nospeech\|>` 태그 | 오디오 10초당 ~70ms |
+| GPT-Live (분석 전용) | Full-duplex 블랙박스 | 예 | N/A | 프레임 단위 40ms |
 
 ---
 
@@ -203,7 +203,7 @@ CONTRACT_KEYS = {"utt_id", "engine", "text", "language",
 
 ### 4.2 모델 선택 프레임워크
 
-세 가지 필터 (2-2에서):
+세 가지 필터:
 
 1. **언어 지원**: 한국어 필수 → 영어 전용 엔진 제외 (Canary-Qwen, Parakeet, Voxtral)
 2. **생태계 성숙도**: pip 설치 가능, T4 호환, 활발한 커뮤니티
@@ -233,7 +233,7 @@ CONTRACT_KEYS = {"utt_id", "engine", "text", "language",
 - **근거**: Whisper는 업계 표준; 생태계 성숙; `avg_logprob`가 유일한 고유 신뢰도 신호
 
 ### P1: 환각 방어
-- 세션 2-3의 3신호 필터 구현
+- 3신호 필터(침묵 역설·정형구·토큰 반복) 구현
 - 침묵 트랙으로 테스트 → 오탐 텍스트 허용치 0
 - LLM 주입 전에 통합 (환각 텍스트는 다운스트림 요약을 오염시킴)
 

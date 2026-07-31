@@ -1,12 +1,12 @@
 # ASR Model Test Plan
 
-> Synthesized from 12 reference notebooks in `lab/reference/ASR/` (2026-07-31)
+> ASR 모델 평가 계획 (2026-07-31)
 
 ---
 
 ## 1. Overview: The ASR Pipeline Architecture
 
-Every notebook converges on a single architecture pattern:
+The evaluation experiments converge on a single architecture pattern:
 
 ```
 Audio → [Preprocess: 16kHz mono, log-mel spectrogram]
@@ -18,18 +18,18 @@ Audio → [Preprocess: 16kHz mono, log-mel spectrogram]
      → [Data Contract Adapter → dict]
 ```
 
-### Engines Evaluated (12 notebooks)
+### Engines Evaluated
 
-| Notebook | Engine | Architecture | Korean Support | Confidence Metric | Latency Profile |
-|---|---|---|---|---|---|
-| 2-1, 2-3, 2-W | faster-whisper (large-v3-turbo) | Encoder-Decoder (AR) | Yes | `avg_logprob` | Fast (turbo: 4 decoder layers) |
-| 2-W FT | ghost613/ft-whisper-turbo-korean | Encoder-Decoder (AR) | Yes (fine-tuned) | `avg_logprob` | Same as turbo |
-| 2-S | Qwen3-ASR-0.6B | LLM-based (AR) | Yes (52 langs) | `text != ""` proxy | ~hundreds ms per utterance |
-| 2-C | Cohere Transcribe | Conformer+AED (NAR) | Yes | None (needs VAD gate) | Fast, 35s auto-chunk |
-| 2-M | Meta Omnilingual (CTC) | Encoder+CTC (NAR) | Yes (1,672 langs) | None | Fastest single-inference |
-| 2-M | Meta Omnilingual (LLM) | Encoder+LLaMA (AR) | Yes | None | Slower (autoregressive penalty) |
-| 2-V | SenseVoice-Small | CTC (NAR) | Yes | `<\|nospeech\|>` tag | ~70ms/10s audio |
-| 2-L | GPT-Live (analysis only) | Full-duplex black box | Yes | N/A | Frame-level 40ms |
+| Engine | Architecture | Korean Support | Confidence Metric | Latency Profile |
+|---|---|---|---|---|
+| faster-whisper (large-v3-turbo) | Encoder-Decoder (AR) | Yes | `avg_logprob` | Fast (turbo: 4 decoder layers) |
+| ghost613/ft-whisper-turbo-korean (Korean FT) | Encoder-Decoder (AR) | Yes (fine-tuned) | `avg_logprob` | Same as turbo |
+| Qwen3-ASR-0.6B | LLM-based (AR) | Yes (52 langs) | `text != ""` proxy | ~hundreds ms per utterance |
+| Cohere Transcribe | Conformer+AED (NAR) | Yes | None (needs VAD gate) | Fast, 35s auto-chunk |
+| Meta Omnilingual (CTC) | Encoder+CTC (NAR) | Yes (1,672 langs) | None | Fastest single-inference |
+| Meta Omnilingual (LLM) | Encoder+LLaMA (AR) | Yes | None | Slower (autoregressive penalty) |
+| SenseVoice-Small | CTC (NAR) | Yes | `<\|nospeech\|>` tag | ~70ms/10s audio |
+| GPT-Live (analysis only) | Full-duplex black box | Yes | N/A | Frame-level 40ms |
 
 ---
 
@@ -203,7 +203,7 @@ Every engine gets a single adapter function that maps native output → contract
 
 ### 4.2 Model Selection Framework
 
-Three filters (from 2-2):
+Three filters:
 
 1. **Language Support**: Korean required → eliminates English-only engines (Canary-Qwen, Parakeet, Voxtral)
 2. **Ecosystem Maturity**: pip-installable, T4-compatible, active community
@@ -233,7 +233,7 @@ Three filters (from 2-2):
 - **Rationale**: Whisper is industry standard; ecosystem mature; `avg_logprob` is the only native confidence signal
 
 ### P1: Hallucination Defense
-- Implement 3-signal filter from session 2-3
+- Implement 3-signal filter (silence paradox, boilerplate patterns, token repetition)
 - Test with silence track → zero false text tolerated
 - Integrate before LLM injection (hallucinated text poisons downstream summaries)
 
