@@ -27,7 +27,7 @@
 jiwer는 설치돼 있으면 교차 검증에만 사용합니다(선택 사항).
 
 모든 함수는 순수 계산 함수라서 모델·GPU 없이 단독으로 테스트할 수 있습니다.
-`python3 asr-metrics.py`로 실행하면 `__main__` 블록의 자체 검증(self-test)이
+`python3 asr_metrics.py`로 실행하면 `__main__` 블록의 자체 검증(self-test)이
 돌아갑니다.
 """
 
@@ -837,7 +837,7 @@ def run_benchmark(engine_name: str, transcribe_fn, eval_set: list,
 # 자체 검증(self-test) — 모델·GPU 없이 오프라인으로 실행되는 테스트
 # ---------------------------------------------------------------------------
 # 레퍼런스 노트북의 assert 블록을 그대로 옮겨 온 것입니다.
-# `python3 asr-metrics.py`로 실행하면 아래 모든 검증이 통과해야 합니다.
+# `python3 asr_metrics.py`로 실행하면 아래 모든 검증이 통과해야 합니다.
 
 if __name__ == "__main__":
     # --- 2.1 CER 검증 (2-1 / 2-S 케이스) ---
@@ -910,4 +910,4 @@ if __name__ == "__main__":
     except ImportError:
         print("jiwer 미설치 — 교차 검증 건너뜀")
 
-    print("asr-metrics.py 자체 검증 통과 ✅")
+    print("asr_metrics.py 자체 검증 통과 ✅")
