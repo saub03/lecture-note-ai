@@ -1,0 +1,50 @@
+# ── my-lab 실행 요구사항 (Apple Silicon / macOS arm64) ─────────────
+# 설치: bash setup_apple_silicon.sh   (또는 아래 tier 를 pip install)
+# Python 3.12~3.14 모두 지원 (mlx/torch/sherpa-onnx cp314 arm64 휠 확인됨)
+#
+# tier 구분 — 설치하지 않아도 노트는 열리고 mock 셀은 돈다.
+#   [REAL] 셀만 해당 tier 가 필요 (aicc_env.AVAIL 이 안내).
+
+# ===== tier: core (필수 — 모든 노트의 mock/demo 셀) =====
+numpy
+jsonschema
+pytest
+matplotlib
+scipy
+soundfile
+
+# ===== tier: ml (05-LLM-2 어텐션 스크래치, mlx-whisper 전이의존) =====
+# torch — Apple Silicon MPS (cp314 arm64 휠 존재)
+torch
+
+# ===== tier: asr (01-ASR [REAL]) =====
+# Apple Silicon 기본 엔진 (Metal, 통합 메모리)
+mlx-whisper
+# CPU(int8) 교차 검증 엔진
+faster-whisper
+
+# ===== tier: llm (04-LLM-1 · 08 [REAL]) =====
+mlx-lm
+
+# ===== tier: tts (02-TTS · 08 [REAL]) =====
+# ONNX 통합 런타임 — Supertonic(ko, 한국어 우선) · Kokoro(en) 등 한 API
+#   ← 한국어 기본 엔진 (Python 3.12~3.14 지원)
+sherpa-onnx
+# 한국어 MeloTTS (KR, MPS/CPU) — fugashi 의존성 때문에 Python 3.12/3.13 전용
+#   (3.14에선 설치 실패 → 노트가 자동으로 스킵하고 Supertonic을 사용)
+# melotts
+
+# ===== tier: server (07-통합 [REAL]) =====
+fastapi
+uvicorn
+websockets
+httpx
+aiortc
+nest-asyncio
+
+# ===== tier: cloning (03-Cloning [REAL] — 유료 API/로컬 대안) =====
+elevenlabs
+# resemblyzer — webrtcvad 의존성 때문에 Python 3.12/3.13 전용 (3.14에선 스킵)
+
+# ===== tier: api (LLM API 클라이언트 — .env 키 필요) =====
+openai
