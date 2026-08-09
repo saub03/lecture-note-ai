@@ -223,5 +223,9 @@ data/temp_audio/*
 !data/uploads/.gitkeep
 !data/temp_audio/.gitkeep
 
+# Project: recorded ASR test audio (ephemeral — drop wavs into test/audio/samples)
+test/audio/samples/*.wav
+!test/audio/samples/.gitkeep
+
 # Project: experiments (ASR/LLM model tests, references)
-lab/reference/
+lab/*
